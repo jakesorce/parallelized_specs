@@ -27,6 +27,14 @@ class ParallelSpecs::SpecLoggerBase < ParallelSpecs::SpecLoggerBaseBase
     end
   end
 
+  def dump_summary(*args);end
+
+  def dump_failures(*args);end
+
+  def dump_failure(*args);end
+
+  def dump_pending(*args);end
+
   #stolen from Rspec
   def close
     @output.close  if (IO === @output) & (@output != $stdout)
