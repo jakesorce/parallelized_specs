@@ -36,7 +36,7 @@ Gem::Specification.new do |s|
     "lib/parallel_tests/runtime_logger.rb",
     "lib/parallel_tests/tasks.rb",
     "lib/tasks/parallel_tests.rake",
-    "parallel_tests.gemspec",
+    "parallel_tests-instructure.gemspec",
     "spec/integration_spec.rb",
     "spec/parallel_cucumber_spec.rb",
     "spec/parallel_specs/spec_failure_logger_spec.rb",
