@@ -31,7 +31,7 @@ class ParallelSpecs::SpecStartFinishLogger < ParallelSpecs::SpecLoggerBase
     @output.puts "finished spec: #{example.description}"
   end
 
-  def example_failed(example)
+  def example_failed(example, count, failure)
     @output.puts "finished spec: #{example.description}"
   end
 
