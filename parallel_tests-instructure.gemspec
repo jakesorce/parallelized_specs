@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "parallel_tests-instructure"
-  s.version = "0.6.18"
+  s.version = "0.6.19"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael Grosser, Bryan Madsen"]
-  s.date = "2012-01-27"
+  s.date = "2012-02-21"
   s.executables = ["parallel_cucumber", "parallel_test", "parallel_spec"]
   s.files = [
     "Gemfile",
