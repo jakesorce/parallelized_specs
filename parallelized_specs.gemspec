@@ -5,46 +5,46 @@
 
 Gem::Specification.new do |s|
   s.name = "parallelized_specs"
-  s.version = "0.0.1"
+  s.version = "0.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jake Sorce, Bryan Madsen"]
   s.date = "2012-04-18"
   s.email = "jake@instructure.com"
-  s.executables = ["parallel_test", "parallel_spec"]
+  s.executables = ["parallelized_spec", "parallelized_test"]
   s.files = [
     "Gemfile",
     "Gemfile.lock",
     "Rakefile",
     "Readme.md",
     "VERSION",
-    "bin/parallel_spec",
-    "bin/parallel_test",
-    "lib/parallel_specs.rb",
-    "lib/parallel_specs/spec_error_count_logger.rb",
-    "lib/parallel_specs/spec_error_logger.rb",
-    "lib/parallel_specs/spec_failures_logger.rb",
-    "lib/parallel_specs/spec_logger_base.rb",
-    "lib/parallel_specs/spec_runtime_logger.rb",
-    "lib/parallel_specs/spec_start_finish_logger.rb",
-    "lib/parallel_specs/spec_summary_logger.rb",
-    "lib/parallel_tests.rb",
-    "lib/parallel_tests/grouper.rb",
-    "lib/parallel_tests/railtie.rb",
-    "lib/parallel_tests/runtime_logger.rb",
-    "lib/parallel_tests/tasks.rb",
-    "lib/tasks/parallel_tests.rake",
+    "bin/parallelized_spec",
+    "bin/parallelized_test",
+    "lib/parallelized_specs.rb",
+    "lib/parallelized_specs/spec_error_count_logger.rb",
+    "lib/parallelized_specs/spec_error_logger.rb",
+    "lib/parallelized_specs/spec_failures_logger.rb",
+    "lib/parallelized_specs/spec_logger_base.rb",
+    "lib/parallelized_specs/spec_runtime_logger.rb",
+    "lib/parallelized_specs/spec_start_finish_logger.rb",
+    "lib/parallelized_specs/spec_summary_logger.rb",
+    "lib/parallelized_tests.rb",
+    "lib/parallelized_tests/grouper.rb",
+    "lib/parallelized_tests/railtie.rb",
+    "lib/parallelized_tests/runtime_logger.rb",
+    "lib/parallelized_tests/tasks.rb",
+    "lib/tasks/parallelized_tests.rake",
     "parallelized_specs.gemspec",
     "spec/integration_spec.rb",
-    "spec/parallel_specs/spec_failure_logger_spec.rb",
-    "spec/parallel_specs/spec_runtime_logger_spec.rb",
-    "spec/parallel_specs/spec_summary_logger_spec.rb",
-    "spec/parallel_specs_spec.rb",
-    "spec/parallel_tests/runtime_logger_spec.rb",
-    "spec/parallel_tests_spec.rb",
+    "spec/parallelized_specs/spec_failure_logger_spec.rb",
+    "spec/parallelized_specs/spec_runtime_logger_spec.rb",
+    "spec/parallelized_specs/spec_summary_logger_spec.rb",
+    "spec/parallelized_specs_spec.rb",
+    "spec/parallelized_tests/runtime_logger_spec.rb",
+    "spec/parallelized_tests_spec.rb",
     "spec/spec_helper.rb"
   ]
-  s.homepage = "http://github.com/jake/parallelized_specs"
+  s.homepage = "http://github.com/jakesorce/parallelized_specs"
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.22"
   s.summary = "Run rspec tests in parallel"
@@ -53,9 +53,12 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<parallel>, [">= 0"])
     else
+      s.add_dependency(%q<parallel>, [">= 0"])
     end
   else
+    s.add_dependency(%q<parallel>, [">= 0"])
   end
 end
 

@@ -1,7 +1,7 @@
-require 'parallel_specs'
+require 'parallelized_specs'
 require File.join(File.dirname(__FILE__), 'spec_logger_base')
 
-class ParallelSpecs::SpecStartFinishLogger < ParallelSpecs::SpecLoggerBase
+class ParallelizedSpecs::SpecStartFinishLogger < ParallelizedSpecs::SpecLoggerBase
   def initialize(options, output=nil)
     output ||= options # rspec 2 has output as first argument
 

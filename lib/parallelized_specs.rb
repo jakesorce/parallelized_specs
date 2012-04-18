@@ -1,6 +1,6 @@
-require 'parallel_tests'
+require 'parallelized_tests'
 
-class ParallelSpecs < ParallelTests
+class ParallelizedSpecs < ParallelizedTests
   def self.run_tests(test_files, process_number, options)
     exe = executable # expensive, so we cache
     version = (exe =~ /\brspec\b/ ? 2 : 1)
@@ -22,7 +22,7 @@ class ParallelSpecs < ParallelTests
 
   # legacy <-> people log to this file using rspec options
   def self.runtime_log
-    'tmp/parallel_profile.log'
+    'tmp/parallelized_profile.log'
   end
 
   protected
@@ -41,7 +41,7 @@ class ParallelSpecs < ParallelTests
   end
 
   def self.spec_opts(rspec_version)
-    options_file = ['spec/parallel_spec.opts', 'spec/spec.opts'].detect{|f| File.file?(f) }
+    options_file = ['spec/parallelized_spec.opts', 'spec/spec.opts'].detect{|f| File.file?(f) }
     return unless options_file
     "-O #{options_file}"
   end

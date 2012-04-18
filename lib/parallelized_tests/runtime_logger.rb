@@ -1,15 +1,15 @@
-class ParallelTests::RuntimeLogger
+class ParallelizedTests::RuntimeLogger
   @@has_started = false
 
   def self.log(test, start_time, end_time)
     return if test.is_a? Test::Unit::TestSuite  # don't log for suites-of-suites
 
     if !@@has_started # make empty log file 
-      File.open(ParallelTests.runtime_log, 'w') do end
+      File.open(ParallelizedTests.runtime_log, 'w') do end
       @@has_started = true
     end
 
-    File.open(ParallelTests.runtime_log, 'a') do |output|
+    File.open(ParallelizedTests.runtime_log, 'a') do |output|
       begin
         output.flock File::LOCK_EX
         output.puts(self.message(test, start_time, end_time))
@@ -71,7 +71,7 @@ class Test::Unit::TestSuite
     start_time=Time.now
     run_without_timing(result, &progress_block)
     end_time=Time.now
-    ParallelTests::RuntimeLogger.log(self.tests.first, start_time, end_time)
+    ParallelizedTests::RuntimeLogger.log(self.tests.first, start_time, end_time)
   end
   @@timing_installed = true
 

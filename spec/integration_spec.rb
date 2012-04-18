@@ -10,7 +10,7 @@ describe 'CLI' do
   end
 
   def folder
-    "/tmp/parallel_tests_tests"
+    "/tmp/parallelized_tests_tests"
   end
 
   def write(file, content)
@@ -25,7 +25,7 @@ describe 'CLI' do
   end
 
   def executable
-    "#{bin_folder}/parallel_test"
+    "#{bin_folder}/parallelized_test"
   end
 
   def run_tests(options={})
@@ -87,8 +87,7 @@ describe 'CLI' do
 
   it "can run through parallel_spec / parallel_cucumber" do
     version = `#{executable} -v`
-    `#{bin_folder}/parallel_spec -v`.should == version
-    `#{bin_folder}/parallel_cucumber -v`.should == version
+    `#{bin_folder}/parallelized_spec -v`.should == version
   end
 
   it "runs faster with more processes" do

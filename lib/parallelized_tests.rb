@@ -1,8 +1,8 @@
 require 'parallel'
-require 'parallel_tests/grouper'
-require 'parallel_tests/railtie'
+require 'parallelized_tests/grouper'
+require 'parallelized_tests/railtie'
 
-class ParallelTests
+class ParallelizedTests
   VERSION = File.read( File.join(File.dirname(__FILE__),'..','VERSION') ).strip
 
   # parallel:spec[:count, :pattern, :options]
@@ -62,7 +62,7 @@ class ParallelTests
   end
 
   def self.runtime_log
-    'tmp/parallel_runtime_test.log'
+    'tmp/parallelized_runtime_test.log'
   end
 
   def self.summarize_results(results)

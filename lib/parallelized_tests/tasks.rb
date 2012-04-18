@@ -1,7 +1,7 @@
 namespace :parallel do
   def run_in_parallel(cmd, options)
     count = (options[:count] ? options[:count].to_i : nil)
-    executable = File.join(File.dirname(__FILE__), '..', '..', 'bin', 'parallel_test')
+    executable = File.join(File.dirname(__FILE__), '..', '..', 'bin', 'parallelized_test')
     command = "#{executable} --exec '#{cmd}' -n #{count} #{'--non-parallel' if options[:non_parallel]}"
     abort unless system(command)
   end
@@ -45,9 +45,9 @@ namespace :parallel do
     desc "run #{type} in parallel with parallel:#{type}[num_cpus]"
     task type, :count, :pattern, :options, :arguments do |t,args|
       $LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__), '..'))
-      require "parallel_tests"
-      count, pattern, options = ParallelTests.parse_rake_args(args)
-      executable = File.join(File.dirname(__FILE__), '..', '..', 'bin', 'parallel_test')
+      require "parallelized_tests"
+      count, pattern, options = ParallelizedTests.parse_rake_args(args)
+      executable = File.join(File.dirname(__FILE__), '..', '..', 'bin', 'parallelized_test')
       command = "#{executable} --type #{type} -n #{count} -p '#{pattern}' -r '#{Rails.root}' -o '#{options}' #{args[:arguments]}"
       abort unless system(command) # allow to chain tasks e.g. rake parallel:spec parallel:features
     end

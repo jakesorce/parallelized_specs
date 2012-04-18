@@ -1,4 +1,4 @@
-class ParallelTests
+class ParallelizedTests
   class Grouper
     def self.in_groups(items, num_groups)
       groups = Array.new(num_groups){ [] }
