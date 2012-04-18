@@ -4,41 +4,38 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = "parallel_tests-instructure"
-  s.version = "0.6.19"
+  s.name = "parallelized_specs"
+  s.version = "0.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Michael Grosser, Bryan Madsen"]
-  s.date = "2012-02-21"
-  s.executables = ["parallel_cucumber", "parallel_test", "parallel_spec"]
+  s.authors = ["Jake Sorce, Bryan Madsen"]
+  s.date = "2012-04-17"
+  s.email = "jake@instructure.com"
+  s.executables = ["parallel_test", "parallel_spec"]
   s.files = [
     "Gemfile",
     "Gemfile.lock",
     "Rakefile",
     "Readme.md",
     "VERSION",
-    "bin/parallel_cucumber",
     "bin/parallel_spec",
     "bin/parallel_test",
-    "lib/parallel_cucumber.rb",
-    "lib/parallel_cucumber/runtime_logger.rb",
     "lib/parallel_specs.rb",
+    "lib/parallel_specs/spec_error_count_logger.rb",
+    "lib/parallel_specs/spec_error_logger.rb",
     "lib/parallel_specs/spec_failures_logger.rb",
     "lib/parallel_specs/spec_logger_base.rb",
     "lib/parallel_specs/spec_runtime_logger.rb",
-    "lib/parallel_specs/spec_summary_logger.rb",
-    "lib/parallel_specs/spec_error_count_logger.rb",
-    "lib/parallel_specs/spec_error_logger.rb",
     "lib/parallel_specs/spec_start_finish_logger.rb",
+    "lib/parallel_specs/spec_summary_logger.rb",
     "lib/parallel_tests.rb",
     "lib/parallel_tests/grouper.rb",
     "lib/parallel_tests/railtie.rb",
     "lib/parallel_tests/runtime_logger.rb",
     "lib/parallel_tests/tasks.rb",
     "lib/tasks/parallel_tests.rake",
-    "parallel_tests-instructure.gemspec",
+    "parallelized_specs.gemspec",
     "spec/integration_spec.rb",
-    "spec/parallel_cucumber_spec.rb",
     "spec/parallel_specs/spec_failure_logger_spec.rb",
     "spec/parallel_specs/spec_runtime_logger_spec.rb",
     "spec/parallel_specs/spec_summary_logger_spec.rb",
@@ -47,10 +44,10 @@ Gem::Specification.new do |s|
     "spec/parallel_tests_spec.rb",
     "spec/spec_helper.rb"
   ]
-  s.homepage = "http://github.com/bmad/parallel_tests-instructure"
+  s.homepage = "http://github.com/jake/parallelized_specs"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.15"
-  s.summary = "Run tests / specs / features in parallel"
+  s.rubygems_version = "1.8.22"
+  s.summary = "Run rspec tests in parallel"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3

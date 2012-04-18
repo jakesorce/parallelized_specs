@@ -1,5 +1,5 @@
-Speedup Test::Unit + RSpec + Cucumber by running parallel on multiple CPUs (or cores).<br/>
-ParallelTests splits tests into even groups(by number of tests or runtime) and runs each group in a single process with its own database.
+Speedup Test::RSpec by running parallel on multiple CPUs (or cores).<br/>
+ParallelizedSpecs splits tests into even groups(by number of tests or runtime) and runs each group in a single process with its own database.
 
 Setup for Rails
 ===============

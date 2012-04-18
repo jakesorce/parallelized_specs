@@ -7,11 +7,12 @@ end
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name     = "parallel_tests"
-    gem.summary  = "Run tests / specs / features in parallel"
-    gem.email    = "grosser.michael@gmail.com"
-    gem.homepage = "http://github.com/grosser/#{gem.name}"
-    gem.authors  = "Michael Grosser"
+    gem.name     = "parallelized_specs"
+    gem.summary  = "Run rspec tests in parallel"
+    gem.email    = "jake@instructure.com"
+    gem.homepage = "http://github.com/jake/#{gem.name}"
+    gem.authors  = "Jake Sorce, Bryan Madsen"
+    gem.version = "0.0.1"
   end
 
   Jeweler::GemcutterTasks.new
