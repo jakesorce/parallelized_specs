@@ -1,4 +1,4 @@
-require 'parallel_specs/spec_logger_base'
+require 'parallelized_specs/spec_logger_base'
 
 class ParallelizedSpecs::SpecRuntimeLogger < ParallelizedSpecs::SpecLoggerBase
   def initialize(*args)

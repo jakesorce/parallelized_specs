@@ -12,7 +12,7 @@ begin
     gem.email    = "jake@instructure.com"
     gem.homepage = "http://github.com/jakesorce/#{gem.name}"
     gem.authors  = "Jake Sorce, Bryan Madsen"
-    gem.version = "0.0.2"
+    gem.version = "0.0.3"
   end
 
   Jeweler::GemcutterTasks.new

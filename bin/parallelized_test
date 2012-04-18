@@ -12,7 +12,7 @@ OptionParser.new do |opts|
 Run all tests in parallel, giving each process ENV['TEST_ENV_NUMBER'] ('', '2', '3', ...)
 
 [optional] Only run selected files & folders:
-    parallel_test test/bar test/baz/xxx_text.rb
+    parallelized_test test/bar test/baz/xxx_text.rb
 
 Options are:
 BANNER
