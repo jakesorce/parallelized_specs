@@ -48,14 +48,13 @@ namespace :parallel do
     count, pattern, options = ParallelizedSpecs.parse_rake_args(args)
     executable = File.join(File.dirname(__FILE__), '..', '..', 'bin', 'parallelized_spec')
     command = "#{executable} --type 'spec' -n #{count} -p '#{pattern}' -r '#{Rails.root}' -o '#{options}' #{args[:arguments]}"
-    abort unless system(command) # allow to chain tasks e.g. rake parallel:spec parallel:features
+    abort unless system(command) # allow to chain tasks e.g. rake parallel:spec
   end
 end
 
 #backwards compatability
 #spec:parallel:prepare
 #spec:parallel
-#test:parallel
 namespace :spec do
   namespace :parallel do
     task :prepare, :count do |t, args|
@@ -67,12 +66,5 @@ namespace :spec do
   task :parallel, :count, :pattern do |t, args|
     $stderr.puts "WARNING -- Deprecated! use parallel:spec"
     Rake::Task['parallel:spec'].invoke(args[:count], args[:pattern])
-  end
-end
-
-namespace :test do
-  task :parallel, :count, :pattern do |t, args|
-    $stderr.puts "WARNING -- Deprecated! use parallel:test"
-    Rake::Task['parallel:test'].invoke(args[:count], args[:pattern])
   end
 end
