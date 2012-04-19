@@ -5,13 +5,13 @@
 
 Gem::Specification.new do |s|
   s.name = "parallelized_specs"
-  s.version = "0.0.5"
+  s.version = "0.0.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jake Sorce, Bryan Madsen"]
-  s.date = "2012-04-18"
+  s.date = "2012-04-19"
   s.email = "jake@instructure.com"
-  s.executables = ["parallelized_spec", "parallelized_test"]
+  s.executables = ["parallelized_spec"]
   s.files = [
     "Gemfile",
     "Gemfile.lock",
@@ -19,8 +19,10 @@ Gem::Specification.new do |s|
     "Readme.md",
     "VERSION",
     "bin/parallelized_spec",
-    "bin/parallelized_test",
     "lib/parallelized_specs.rb",
+    "lib/parallelized_specs/grouper.rb",
+    "lib/parallelized_specs/railtie.rb",
+    "lib/parallelized_specs/runtime_logger.rb",
     "lib/parallelized_specs/spec_error_count_logger.rb",
     "lib/parallelized_specs/spec_error_logger.rb",
     "lib/parallelized_specs/spec_failures_logger.rb",
@@ -28,20 +30,13 @@ Gem::Specification.new do |s|
     "lib/parallelized_specs/spec_runtime_logger.rb",
     "lib/parallelized_specs/spec_start_finish_logger.rb",
     "lib/parallelized_specs/spec_summary_logger.rb",
-    "lib/parallelized_tests.rb",
-    "lib/parallelized_tests/grouper.rb",
-    "lib/parallelized_tests/railtie.rb",
-    "lib/parallelized_tests/runtime_logger.rb",
-    "lib/parallelized_tests/tasks.rb",
-    "lib/tasks/parallelized_tests.rake",
+    "lib/parallelized_specs/tasks.rb",
+    "lib/tasks/parallelized_specs.rake",
     "parallelized_specs.gemspec",
-    "spec/integration_spec.rb",
     "spec/parallelized_specs/spec_failure_logger_spec.rb",
     "spec/parallelized_specs/spec_runtime_logger_spec.rb",
     "spec/parallelized_specs/spec_summary_logger_spec.rb",
     "spec/parallelized_specs_spec.rb",
-    "spec/parallelized_tests/runtime_logger_spec.rb",
-    "spec/parallelized_tests_spec.rb",
     "spec/spec_helper.rb"
   ]
   s.homepage = "http://github.com/jakesorce/parallelized_specs"
@@ -53,12 +48,9 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<parallel>, [">= 0"])
     else
-      s.add_dependency(%q<parallel>, [">= 0"])
     end
   else
-    s.add_dependency(%q<parallel>, [">= 0"])
   end
 end
 
