@@ -1,6 +1,9 @@
 require 'parallel'
 require 'parallelized_specs/grouper'
 require 'parallelized_specs/railtie'
+require 'parallelized_specs/spec_error_logger'
+require 'parallelized_specs/spec_error_count_logger'
+require 'parallelized_specs/spec_start_finish_logger'
 
 class ParallelizedSpecs
   VERSION = File.read(File.join(File.dirname(__FILE__), '..', 'VERSION')).strip
