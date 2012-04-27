@@ -5,20 +5,18 @@
 
 Gem::Specification.new do |s|
   s.name = "parallelized_specs"
-  s.version = "0.0.8"
+  s.version = "0.1.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jake Sorce, Bryan Madsen"]
-  s.date = "2012-04-23"
+  s.date = "2012-04-27"
   s.email = "jake@instructure.com"
-  s.executables = ["parallelized_spec"]
   s.files = [
     "Gemfile",
     "Gemfile.lock",
     "Rakefile",
     "Readme.md",
     "VERSION",
-    "bin/parallelized_spec",
     "lib/parallelized_specs.rb",
     "lib/parallelized_specs/grouper.rb",
     "lib/parallelized_specs/railtie.rb",
@@ -48,9 +46,12 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<parallel>, [">= 0"])
     else
+      s.add_dependency(%q<parallel>, [">= 0"])
     end
   else
+    s.add_dependency(%q<parallel>, [">= 0"])
   end
 end
 

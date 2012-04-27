@@ -56,9 +56,7 @@ ParallelizedSpecs uses 1 database per test-process, 2 processes will use `*_test
     rake parallel:prepare
 
 ### 4: Run!
-    rake parallel:test          # Test::Unit
     rake parallel:spec          # RSpec
-    rake parallel:features      # Cucumber
 
     rake parallel:test[1] --> force 1 CPU --> 86 seconds
     rake parallel:test    --> got 2 CPUs? --> 47 seconds
@@ -67,7 +65,7 @@ ParallelizedSpecs uses 1 database per test-process, 2 processes will use `*_test
 
 Test by pattern (e.g. use one integration server per subfolder / see if you broke any 'user'-related tests)
 
-    rake parallel:test[^unit] # everything in test/unit folder (every test file matching /^unit/)
+    rake parallel:test[^unit] # everything in test/spec folder (every test file matching /^spec/)
     rake parallel:test[user]  # run users_controller + user_helper + user tests
     rake parallel:test['user|product']  # run user and product related tests
 
@@ -150,35 +148,6 @@ Setup for non-rails
 [optional] Only run selected files & folders:
 
     parallelized_specs test/bar test/baz/xxx_text_spec.rb
-
-Options are:
-
-    -n [PROCESSES]                   How many processes to use, default: available CPUs
-    -p, --path [PATH]                run tests inside this path only
-        --no-sort                    do not sort files before running them
-    -m, --multiply-processes [FLOAT] use given number as a multiplier of processes to run
-    -r, --root [PATH]                execute test commands from this path
-    -e, --exec [COMMAND]             execute this code parallel and with ENV['TEST_ENV_NUM']
-    -o, --test-options '[OPTIONS]'   execute test commands with those options
-    -t, --type [TYPE]                which type of tests to run? test, spec or features
-        --non-parallel               execute same commands but do not in parallel, needs --exec
-    -v, --version                    Show Version
-    -h, --help                       Show this.
-
-You can run any kind of code with -e / --execute
-
-    parallel_test -n 5 -e 'ruby -e "puts %[hello from process #{ENV[:TEST_ENV_NUMBER.to_s].inspect}]"'
-    hello from process "2"
-    hello from process ""
-    hello from process "3"
-    hello from process "5"
-    hello from process "4"
-
-<table>
-<tr><td></td><td>1 Process</td><td>2 Processes</td><td>4 Processes</td></tr>
-<tr><td>RSpec spec-suite</td><td>18s</td><td>14s</td><td>10s</td></tr>
-<tr><td>Rails-ActionPack</td><td>88s</td><td>53s</td><td>44s</td></tr>
-</table>
 
 TIPS
 ====

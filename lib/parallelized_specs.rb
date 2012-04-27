@@ -1,4 +1,6 @@
 require 'parallel'
+raise "please ' gem install parallel '" if Gem::Version.new(Parallel::VERSION) < Gem::Version.new('0.4.2')
+require 'optparse'
 require 'parallelized_specs/grouper'
 require 'parallelized_specs/railtie'
 require 'parallelized_specs/spec_error_logger'
@@ -51,6 +53,64 @@ class ParallelizedSpecs
     "_spec.rb"
   end
 
+  def self.execute_parallel_db(cmd, options={})
+    count = options[:count].to_i
+    count = Parallel.processor_count if count == 0
+    runs = (0...count).to_a
+    results = if options[:non_parallel]
+                runs.map do |i|
+                  execute_command(cmd, i, options)
+                end
+              else
+                Parallel.map(runs, :in_processes => count) do |i|
+                  execute_command(cmd, i, options)
+                end
+              end.flatten
+    abort if results.any? { |r| r[:exit_status] != 0 }
+  end
+
+  def self.execute_parallel_specs(options)
+    num_processes = options[:count] || Parallel.processor_count
+    lib, name, task = {
+        'spec' => %w(specs spec spec),
+    }[options[:type]||'spec']
+
+    start = Time.now
+
+    tests_folder = task
+    tests_folder = File.join(options[:root], tests_folder) unless options[:root].to_s.empty?
+    if options[:files].is_a?(Array)
+      groups = tests_in_groups(options[:files] || tests_folder, num_processes, options)
+    else
+      files_array = options[:files].split(/ /)
+      groups = tests_in_groups(files_array || tests_folder, num_processes, options)
+    end
+    num_processes = groups.size
+
+    #adjust processes to groups
+    abort "no #{name}s found!" if groups.size == 0
+
+    num_tests = groups.inject(0) { |sum, item| sum + item.size }
+    puts "#{num_processes} processes for #{num_tests} #{name}s, ~ #{num_tests / groups.size} #{name}s per process"
+
+    test_results = Parallel.map(groups, :in_processes => num_processes) do |group|
+      run_tests(group, groups.index(group), options)
+    end
+
+    #parse and print results
+    results = find_results(test_results.map { |result| result[:stdout] }*"")
+    puts ""
+    puts summarize_results(results)
+
+    #report total time taken
+    puts ""
+    puts "Took #{Time.now - start} seconds"
+
+    #exit with correct status code so rake parallel:test && echo 123 works
+    failed = test_results.any? { |result| result[:exit_status] != 0 }
+    abort "#{name.capitalize}s Failed" if failed
+  end
+
   # parallel:spec[:count, :pattern, :options]
   def self.parse_rake_args(args)
     # order as given by user
@@ -71,7 +131,7 @@ class ParallelizedSpecs
   end
 
   # finds all tests and partitions them into groups
-  def self.tests_in_groups(root, num_groups, options={})
+  def self.tests_in_groups(root, num_groups, options)
     tests = find_tests(root, options)
     if options[:no_sort]
       Grouper.in_groups(tests, num_groups)
@@ -184,15 +244,15 @@ class ParallelizedSpecs
     end
   end
 
-  def self.find_tests(root, options={})
+  def self.find_tests(root, options)
     if root.is_a?(Array)
       root
     else
       # follow one symlink and direct children
       # http://stackoverflow.com/questions/357754/can-i-traverse-symlinked-directories-in-ruby-with-a-glob
-      files = Dir["#{root}/**{,/*/**}/*#{test_suffix}"].uniq
+      files = Dir["#{Rails.root}/**{,/*/**}/*#{test_suffix}"].uniq
       files = files.map { |f| f.sub(root+'/', '') }
-      files = files.grep(/#{options[:pattern]}/)
+      files = files.grep(/#{options['pattern']}/)
       files.map { |f| "#{root}/#{f}" }
     end
   end
