@@ -1,6 +1,5 @@
 require 'parallel'
 raise "please ' gem install parallel '" if Gem::Version.new(Parallel::VERSION) < Gem::Version.new('0.4.2')
-require 'optparse'
 require 'parallelized_specs/grouper'
 require 'parallelized_specs/railtie'
 require 'parallelized_specs/spec_error_logger'
