@@ -45,7 +45,7 @@ namespace :parallel do
   task 'spec', :count, :pattern, :options, :arguments do |t, args|
     count, pattern, options = ParallelizedSpecs.parse_rake_args(args)
     #command = "-n #{count} -p '#{pattern}' -r '#{Rails.root}' -o '#{options}' #{args[:arguments]}"
-    opts = Hash[:count => count, :pattern => pattern, :options => options, :root => Rails.root, :files => args[:arguments]]
+    opts = [:count => count, :pattern => pattern, :options => options, :root => Rails.root, :files => args[:arguments]]
     ParallelizedSpecs.execute_parallel_specs(opts)
   end
 end
