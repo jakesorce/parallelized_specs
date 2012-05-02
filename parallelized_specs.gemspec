@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "parallelized_specs"
-  s.version = "0.1.6"
+  s.version = "0.1.7"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jake Sorce, Bryan Madsen"]
-  s.date = "2012-04-27"
+  s.date = "2012-05-02"
   s.email = "jake@instructure.com"
   s.files = [
     "Gemfile",
