@@ -58,22 +58,20 @@ ParallelizedSpecs uses 1 database per test-process, 2 processes will use `*_test
 ### 4: Run!
     rake parallel:spec          # RSpec
 
-    rake parallel:test[1] --> force 1 CPU --> 86 seconds
-    rake parallel:test    --> got 2 CPUs? --> 47 seconds
-    rake parallel:test    --> got 4 CPUs? --> 26 seconds
+    rake parallel:spec[1] --> force 1 CPU --> 86 seconds
+    rake parallel:spec    --> got 2 CPUs? --> 47 seconds
+    rake parallel:spec    --> got 4 CPUs? --> 26 seconds
     ...
 
 Test by pattern (e.g. use one integration server per subfolder / see if you broke any 'user'-related tests)
 
-    rake parallel:test[^unit] # everything in test/spec folder (every test file matching /^spec/)
-    rake parallel:test[user]  # run users_controller + user_helper + user tests
-    rake parallel:test['user|product']  # run user and product related tests
-
+    rake parallel:spec[4,user,]  # force 4 CPU and run users specs
+    rake parallel:spec['user|product']  # run user and product related specs
 
 Example output
 --------------
     2 processes for 210 specs, ~ 105 specs per process
-    ... test output ...
+    ... spec output ...
 
     843 examples, 0 failures, 1 pending
 
@@ -97,10 +95,6 @@ Rspec: Add to your `spec/parallelized_specs.opts` (or `spec/spec.opts`) :
       If installed as plugin: -I vendor/plugins/parallelized_specs/lib
       --format progress
       --format ParallelizedSpecs::SpecRuntimeLogger --out tmp/parallel_profile.log
-
-Test::Unit:  Add to your `test_helper.rb`:
-    require 'parallelized_specs/runtime_logger'
-
 
 SpecSummaryLogger
 --------------------
