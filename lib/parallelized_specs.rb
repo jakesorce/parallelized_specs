@@ -53,7 +53,7 @@ class ParallelizedSpecs
   end
 
   def self.execute_parallel_db(cmd, options={})
-    count = options[:count].to_i
+    count = options[:count].to_i || Parallel.processor_count
     count = Parallel.processor_count if count == 0
     runs = (0...count).to_a
     results = if options[:non_parallel]
@@ -69,19 +69,26 @@ class ParallelizedSpecs
   end
 
   def self.execute_parallel_specs(options)
+    if options[:files].to_s.empty?
+      tests = find_tests(Rails.root, options)
+      run_specs(tests, options)
+    else
+      run_specs(options[:files], options)
+    end
+  end
+
+  def self.run_specs(tests, options)
     num_processes = options[:count] || Parallel.processor_count
-    lib, name, task = {
-        'spec' => %w(specs spec spec),
-    }[options[:type]||'spec']
+    name = 'spec'
 
     start = Time.now
 
-    tests_folder = task
+    tests_folder = 'spec'
     tests_folder = File.join(options[:root], tests_folder) unless options[:root].to_s.empty?
-    if options[:files].is_a?(Array)
-      groups = tests_in_groups(options[:files] || tests_folder, num_processes, options)
+    if tests.is_a?(Array)
+      groups = tests_in_groups(tests || tests_folder, num_processes, options)
     else
-      files_array = options[:files].split(/ /)
+      files_array = tests.split(/ /)
       groups = tests_in_groups(files_array || tests_folder, num_processes, options)
     end
     num_processes = groups.size
@@ -110,7 +117,7 @@ class ParallelizedSpecs
     abort "#{name.capitalize}s Failed" if failed
   end
 
-  # parallel:spec[:count, :pattern, :options]
+# parallel:spec[:count, :pattern, :options]
   def self.parse_rake_args(args)
     # order as given by user
     args = [args[:count], args[:pattern], args[:options]]
@@ -129,9 +136,8 @@ class ParallelizedSpecs
     [num_processes.to_i, pattern.to_s, options.to_s]
   end
 
-  # finds all tests and partitions them into groups
-  def self.tests_in_groups(root, num_groups, options)
-    tests = find_tests(root, options)
+# finds all tests and partitions them into groups
+  def self.tests_in_groups(tests, num_groups, options)
     if options[:no_sort]
       Grouper.in_groups(tests, num_groups)
     else
@@ -176,7 +182,7 @@ class ParallelizedSpecs
 
   protected
 
-  # read output of the process and print in in chucks
+# read output of the process and print in in chucks
   def self.fetch_output(process, options)
     all = ''
     buffer = ''
@@ -205,7 +211,7 @@ class ParallelizedSpecs
     all
   end
 
-  # copied from http://github.com/carlhuda/bundler Bundler::SharedHelpers#find_gemfile
+# copied from http://github.com/carlhuda/bundler Bundler::SharedHelpers#find_gemfile
   def self.bundler_enabled?
     return true if Object.const_defined?(:Bundler)
 
@@ -243,16 +249,17 @@ class ParallelizedSpecs
     end
   end
 
-  def self.find_tests(root, options)
+  def self.find_tests(root, options={})
     if root.is_a?(Array)
       root
     else
       # follow one symlink and direct children
       # http://stackoverflow.com/questions/357754/can-i-traverse-symlinked-directories-in-ruby-with-a-glob
-      files = Dir["#{Rails.root}/**{,/*/**}/*#{test_suffix}"].uniq
+      files = Dir["#{root}/**{,/*/**}/*#{test_suffix}"].uniq
       files = files.map { |f| f.sub(root+'/', '') }
-      files = files.grep(/#{options['pattern']}/)
-      files.map { |f| "#{root}/#{f}" }
+      files = files.grep(/#{options[:pattern]}/)
+      files.map { |f| "/#{f}" }
     end
   end
+
 end
