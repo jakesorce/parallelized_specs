@@ -13,17 +13,22 @@ namespace :parallel do
     ParallelizedSpecs.execute_parallel_db('rake db:drop RAILS_ENV=test', args)
   end
 
-  desc "update test databases by dumping and loading --> parallel:prepare[num_cpus]"
-  task(:prepare, [:count] => 'db:abort_if_pending_migrations') do |t, args|
+  desc "update test databases by dumping and loading --> parallel:dump_load[num_cpus]"
+  task(:dump_load, [:count] => 'db:abort_if_pending_migrations') do |t, args|
     if defined?(ActiveRecord) && ActiveRecord::Base.schema_format == :ruby
       # dump then load in parallel
       Rake::Task['db:schema:dump'].invoke
-      Rake::Task['parallel:load_schema'].invoke(args[:count])
+      Rake::Task['parallel:load_schema'].invoke
     else
-      # there is no separate dump / load for schema_format :sql -> do it safe and slow
+      # there is no separate dump / load for s(args[:count])chema_format :sql -> do it safe and slow
       args = args.to_hash.merge(:non_parallel => true) # normal merge returns nil
-      ParallelizedSpecs.execute_parallel_db('rake db:test:prepare --trace', args)
+      ParallelizedSpecs.execute_parallel_db('rake db:test:dump_load', args)
     end
+  end
+
+  desc "drop, create, migrate all in one --> parallel:prepare[num_cpus]"
+  task :prepare, :count do |t, args|
+    ParallelizedSpecs.execute_parallel_db('rake db:drop db:create db:migrate RAILS_ENV=test', args)
   end
 
   # when dumping/resetting takes too long
@@ -40,7 +45,7 @@ namespace :parallel do
 
   desc "run spec in parallel with parallel:spec[num_cpus]"
   task 'spec', :count, :pattern, :options, :arguments do |t, args|
-    count, pattern, options = ParallelizedSpecs.parse_rake_args(args)
+    count, pattern = ParallelizedSpecs.parse_rake_args(args)
     opts = {:count => count, :pattern => pattern, :root => Rails.root, :files => args[:arguments]}
     ParallelizedSpecs.execute_parallel_specs(opts)
   end

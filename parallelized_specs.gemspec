@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "parallelized_specs"
-  s.version = "0.1.8"
+  s.version = "0.1.9"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jake Sorce, Bryan Madsen"]
-  s.date = "2012-05-03"
+  s.date = "2012-05-07"
   s.email = "jake@instructure.com"
   s.files = [
     "Gemfile",
@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
     "lib/parallelized_specs/tasks.rb",
     "lib/tasks/parallelized_specs.rake",
     "parallelized_specs.gemspec",
+    "spec/integration_spec.rb",
     "spec/parallelized_specs/spec_failure_logger_spec.rb",
     "spec/parallelized_specs/spec_runtime_logger_spec.rb",
     "spec/parallelized_specs/spec_summary_logger_spec.rb",
