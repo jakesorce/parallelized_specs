@@ -11,8 +11,8 @@ begin
     gem.summary  = "Run rspec tests in parallel"
     gem.email    = "jake@instructure.com"
     gem.homepage = "http://github.com/jakesorce/#{gem.name}"
-    gem.authors  = "Jake Sorce, Bryan Madsen"
-    gem.version = "0.1.9"
+    gem.authors  = "Jake Sorce, Bryan Madsen, Shawn Meredith"
+    gem.version = "0.2.2"
   end
 
   Jeweler::GemcutterTasks.new
