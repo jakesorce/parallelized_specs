@@ -12,9 +12,8 @@ begin
     gem.email    = "jake@instructure.com"
     gem.homepage = "http://github.com/jakesorce/#{gem.name}"
     gem.authors  = "Jake Sorce, Bryan Madsen, Shawn Meredith"
-    gem.version = "0.2.2"
+    gem.version = "0.2.4"
   end
-
   Jeweler::GemcutterTasks.new
 rescue LoadError
   puts "Jeweler, or one of its dependencies, is not available. Install it with: sudo gem install jeweler"

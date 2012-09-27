@@ -5,6 +5,8 @@ require 'parallelized_specs/railtie'
 require 'parallelized_specs/spec_error_logger'
 require 'parallelized_specs/spec_error_count_logger'
 require 'parallelized_specs/spec_start_finish_logger'
+require 'parallelized_specs/shared_example_failures_logger'
+require 'parallelized_specs/example_failures_logger'
 
 class ParallelizedSpecs
   VERSION = File.read(File.join(File.dirname(__FILE__), '..', 'VERSION')).strip
