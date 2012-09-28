@@ -4,16 +4,17 @@ class ParallelizedSpecs::SharedExampleRerunFailuresLogger < ParallelizedSpecs::S
 
   def example_failed(example, *args)
     if RSPEC_1
-      @failed_shared_examples ||= {}
-      spec_caller = self.example_group.backtrace.match(/spec.*\d/).to_s #regex later to get right relative path
-      failed_shared_spec = example.location.match(/spec.*\d/).to_s
-
-      if !!self.example_group.nested_descriptions.to_s.match(/shared/) || !!self.instance_variable_get(:@example_group).examples.last.location.match(/helper/)
-        if spec_caller == @failed_shared_examples.keys.last || spec_caller == @failed_shared_examples.keys.first || !!spec_caller.match(/helper/)
-          key = @failed_shared_examples.keys.first
-          @failed_shared_examples[key] << "#{failed_shared_spec} "
-        else
-          @failed_shared_examples["#{spec_caller}"] = ["#{failed_shared_spec} "]
+      if example.location != nil
+        @failed_shared_examples ||= {}
+        spec_caller = self.example_group.backtrace.match(/spec.*\d/).to_s #regex later to get right relative path
+        failed_shared_spec = example.location.match(/spec.*\d/).to_s
+        if !!self.example_group.nested_descriptions.to_s.match(/shared/) || !!self.instance_variable_get(:@example_group).examples.last.location.match(/helper/)
+          if spec_caller == @failed_shared_examples.keys.last || spec_caller == @failed_shared_examples.keys.first || !!spec_caller.match(/helper/)
+            key = @failed_shared_examples.keys.first
+            @failed_shared_examples[key] << "#{failed_shared_spec} "
+          else
+            @failed_shared_examples["#{spec_caller}"] = ["#{failed_shared_spec} "]
+          end
         end
       end
     else
