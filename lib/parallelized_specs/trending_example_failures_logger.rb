@@ -18,7 +18,7 @@ class ParallelizedSpecs::TrendingExampleFailures < ParallelizedSpecs::SpecLogger
       if example.location != nil
       super
         @failed_examples ||= {}
-        @failed_examples["#{example.location.match(/spec.*\d/).to_s}*"] = ["#{example.description}*", "#{failure.header}*", "#{failure.exception.to_s.gsub(/\n/,"")}*", "#{failure.exception.backtrace.to_s.gsub(/\n/,"")}*", "#{Time.now.to_date}*", "#{@hudson_build_info}"]
+        @failed_examples["#{example.location.match(/spec.*\d/).to_s}*"] = ["#{example.description}*", "#{failure.header}*", "#{failure.exception.to_s.gsub(/\n/,"")}*", "#{failure.exception.backtrace.to_s.gsub(/\n/,"")}*", "#{Date.today}*", "#{@hudson_build_info}"]
       end
     end
   end
