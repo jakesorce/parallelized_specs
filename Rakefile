@@ -12,7 +12,7 @@ begin
     gem.email    = "jake@instructure.com"
     gem.homepage = "http://github.com/jakesorce/#{gem.name}"
     gem.authors  = "Jake Sorce, Bryan Madsen, Shawn Meredith"
-    gem.version = "0.2.6"
+    gem.version = "0.2.92"
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
