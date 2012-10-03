@@ -26,7 +26,7 @@ class ParallelizedSpecs::ExampleRerunFailuresLogger < ParallelizedSpecs::SpecLog
   def dump_summary(*args)
     lock_output do
       if RSPEC_1
-        @output.puts "#{@failed_examples.to_s.chomp}"
+        @output.puts "#{@failed_examples.to_s.gsub(/\n/,"")} "
       end
     end
     @output.flush
