@@ -4,8 +4,7 @@ class ParallelizedSpecs::SharedExampleRerunFailuresLogger < ParallelizedSpecs::S
 
   def example_failed(example, *args)
     if RSPEC_1
-
-      if example.location.match(/spec.*\d/).to_s != nil
+      if example.location != nil && example.location.match(/spec.*\d/).to_s != nil
         @failed_shared_examples ||= {}
         spec_caller = self.example_group.backtrace.match(/spec.*\d/).to_s
         failed_shared_spec = example.location.match(/spec.*\d/).to_s
