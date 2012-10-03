@@ -6,6 +6,7 @@ require 'parallelized_specs/spec_error_logger'
 require 'parallelized_specs/spec_error_count_logger'
 require 'parallelized_specs/spec_start_finish_logger'
 require 'parallelized_specs/shared_example_failures_logger'
+require 'parallelized_specs/trending_example_failures_logger'
 require 'parallelized_specs/example_failures_logger'
 
 class ParallelizedSpecs
