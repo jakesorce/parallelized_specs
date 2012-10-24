@@ -6,21 +6,17 @@ class ParallelizedSpecs::SharedExampleRerunFailuresLogger < ParallelizedSpecs::S
     if RSPEC_1
       if example.location != nil && example.location.match(/spec.*\d/).to_s != nil
         @failed_shared_examples ||= {}
-        spec_caller = self.example_group.backtrace.match(/spec.*\d/).to_s
-        failed_shared_spec = example.location.match(/spec.*\d/).to_s
-
         if !!self.example_group.nested_descriptions.to_s.match(/shared/) || !!self.instance_variable_get(:@example_group).examples.last.location.match(/helper/)
+          spec_caller = example_group.location.match(/spec.*b/).to_s
+          failed_shared_spec = example.location.match(/spec.*\d/).to_s
           if spec_caller == @failed_shared_examples.keys.last || spec_caller == @failed_shared_examples.keys.first
             key = @failed_shared_examples.keys.first
             @failed_shared_examples[key] << "#{failed_shared_spec} "
           else
             @failed_shared_examples["#{spec_caller}"] = ["#{failed_shared_spec} "]
           end
-
         end
       end #if example.location is nil block ends
-    else #if not RSPEC_1
-      super
     end
   end
 
