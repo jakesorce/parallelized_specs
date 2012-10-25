@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "parallelized_specs"
-  s.version = "0.3.17"
+  s.version = "0.3.18"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jake Sorce, Bryan Madsen, Shawn Meredith"]
@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
     "VERSION",
     "lib/parallelized_specs.rb",
     "lib/parallelized_specs/example_failures_logger.rb",
+    "lib/parallelized_specs/failures_rerun_logger.rb",
     "lib/parallelized_specs/grouper.rb",
     "lib/parallelized_specs/railtie.rb",
     "lib/parallelized_specs/runtime_logger.rb",
