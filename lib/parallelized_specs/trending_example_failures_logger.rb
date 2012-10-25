@@ -11,6 +11,14 @@ class ParallelizedSpecs::TrendingExampleFailures < ParallelizedSpecs::SpecLogger
     end
   end
 
+  def dump_summary(*args);end
+
+  def dump_failures(*args);end
+
+  def dump_failure(*args);end
+
+  def dump_pending(*args);end
+
   def dump_summary(*args)
     @hudson_build_info = File.read("#{RAILS_ROOT}/spec/build_info.txt")
     lock_output do
