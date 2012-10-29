@@ -10,6 +10,7 @@ require 'parallelized_specs/example_failures_logger'
 require 'parallelized_specs/trending_example_failures_logger'
 require 'parallelized_specs/failures_rerun_logger'
 
+
 class ParallelizedSpecs
   VERSION = File.read(File.join(File.dirname(__FILE__), '..', 'VERSION')).strip
 
