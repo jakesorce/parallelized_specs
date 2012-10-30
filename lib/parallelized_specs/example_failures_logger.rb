@@ -7,7 +7,7 @@ class ParallelizedSpecs::ExampleRerunFailuresLogger < ParallelizedSpecs::SpecLog
       if example.location != nil
         unless !!self.example_group.nested_descriptions.to_s.match(/shared/) || !!self.instance_variable_get(:@example_group).examples.last.location.match(/helper/)
           @failed_examples ||= []
-          @failed_examples << "#{example.location.match(/spec.*\d/).to_s.chomp}"
+          @failed_examples << "#{example.location.match(/spec.*\d/).to_s} "
         end
       end
       else
