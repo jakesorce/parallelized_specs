@@ -104,7 +104,7 @@ class ParallelizedSpecs
     puts "#{num_processes} processes for #{num_tests} #{name}s, ~ #{num_tests / groups.size} #{name}s per process"
 
     test_results = Parallel.map(groups, :in_processes => num_processes) do |group|
-      run_tests(group, groups.index(group), options)
+     run_tests(group, groups.index(group), options)
     end
 
     #parse and print results
@@ -275,7 +275,7 @@ class ParallelizedSpecs
     rerun_specs = []
     filename = "#{RAILS_ROOT}/tmp/parallel_log/rspec.failures"
 
-    @error_count = %x{wc -l "#{filename}"}.match(/\d/).to_s #counts the number of lines in the file
+    @error_count = %x{wc -l "#{filename}"}.match(/\d*[^\D]/).to_s #counts the number of lines in the file
     @error_count = @error_count.to_i
 
     case
@@ -295,17 +295,23 @@ class ParallelizedSpecs
         rerun_specs.each do |l|
           rerun_failed_examples = true
           puts "#{l} will be ran and marked as a success if it passes"
-          result = %x[bundle exec rake spec #{l}]
-          #can't just use exit code, if specs fail to start it will pass or if a spec isn't found, and sometimes rspec 1 exit codes aren't right
-          rerun_status = result.match(/1 example, \d failure/).to_s
 
-          case rerun_status
-            when "" #when specs fail to run it exits with 0 examples, 0 failures and won't be matched by the previous regex
+          result = %x[DISPLAY=:99 bundle exec rake spec #{l}]
+          #can't just use exit code, if specs fail to start it will pass or if a spec isn't found, and sometimes rspec 1 exit codes aren't right
+          rerun_status = result.scan(/\d*[^\D]\d*/).to_a
+          if rerun_status.length >= 2
+          @examples = rerun_status[0].to_i
+          @failures = rerun_status[1].to_i
+          else
+            abort "spec didn't actually run, ending rerun process early"
+          end
+
+            if @examples == 0 #when specs fail to run it exits with 0 examples, 0 failures and won't be matched by the previous regex
               abort "the spec failed to run on the rerun try, marking build as failed"
-            when "1 example, 1 failure"
+            elsif @failures > 0
               puts "the example failed again"
               @rerun_failures << l
-            when "1 example, 0 failure"
+            elseif @examples > 0 && @failures == 0
               puts "the example passed and is being marked as a success"
               @rerun_passes << l
             else
