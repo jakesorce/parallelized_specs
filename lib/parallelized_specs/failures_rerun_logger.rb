@@ -3,11 +3,11 @@ require 'parallelized_specs/spec_logger_base'
 
 module RSpec
   class ParallelizedSpecs::FailuresFormatter < ParallelizedSpecs::SpecLoggerBase
-    FILENAME = "#{RAILS_ROOT}/tmp/parallel_log/rspec.failures"
 
     def example_failed(example, counter, failure)
-      f = File.new(FILENAME, "a+")
-      f.puts retry_command(example)
+      lock_output do
+        @output.puts retry_command(example)
+      end
     end
 
     def dump_summary(*args)

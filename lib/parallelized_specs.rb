@@ -124,6 +124,7 @@ class ParallelizedSpecs
     else
       abort "#{name.capitalize}s Failed" if failed
     end
+    puts "marking build as PASSED"
   end
 
 # parallel:spec[:count, :pattern, :options]
@@ -285,10 +286,9 @@ class ParallelizedSpecs
           else
             rerun_specs.push line
           end
-          puts "failed specs will be rerun"
         end
 
-        puts "rerunning #{@error_count} examples again"
+        puts "failed specs will be rerun\n rerunning #{@error_count} examples again"
         @rerun_failures ||= []
         @rerun_passes ||= []
 
@@ -317,9 +317,9 @@ class ParallelizedSpecs
       when @error_count == 0
         abort "#{@error_count} errors, but the build failed, errors were not written to the file or there is something else wrong, marking build as a failure"
       when @error_count > 9
-        abort "#{error_count} errors are to many to rerun, marking the build as a failure"
+        abort "#{@error_count} errors are to many to rerun, marking the build as a failure"
       else
-        puts "#Total errors {@error_count}"
+        puts "#Total errors #{@error_count}"
         abort "unexpected error information, please check errors are being written to file correctly"
     end
 
