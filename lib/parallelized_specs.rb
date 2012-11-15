@@ -311,7 +311,7 @@ class ParallelizedSpecs
             elsif @failures > 0
               puts "the example failed again"
               @rerun_failures << l
-            elseif @examples > 0 && @failures == 0
+            elsif @examples > 0 && @failures == 0
               puts "the example passed and is being marked as a success"
               @rerun_passes << l
             else
