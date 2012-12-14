@@ -10,7 +10,8 @@ module RSpec
       end
     end
 
-    def dump_summary(*args)
+    def dump_summary(duration, example_count, failure_count, pending_count)
+     ;
     end
 
     def dump_failures(*args)

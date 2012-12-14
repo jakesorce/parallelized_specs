@@ -28,13 +28,13 @@ class ParallelizedSpecs::SpecErrorLogger < ParallelizedSpecs::SpecLoggerBase
       @output.puts ""
       @output.puts ""
       @output.puts "FOR TEST EXECUTOR #{env_test_number}: #{@failed_examples.size} failed, #{@passed_examples.size} passed:"
-      @failed_examples.each.with_index do | failure, i |
+      @failed_examples.each.with_index do |failure, i|
         @output.puts ""
         @output.puts "#{ i + 1 })"
         @output.puts failure.header
         unless failure.exception.nil?
           @output.puts failure.exception.to_s
-          failure.exception.backtrace.each do | caller |
+          failure.exception.backtrace.each do |caller|
             @output.puts caller
           end
         end
