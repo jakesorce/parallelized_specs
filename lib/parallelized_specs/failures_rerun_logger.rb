@@ -26,10 +26,12 @@ module RSpec
       ;
     end
 
+
     def retry_command(example)
-      spec_file = example_group.location.gsub("\"", "\\\"").match(/spec.*b/).to_s
+      puts "Storing #{example_group.location} for a post build rerun attempt"
+      spec_file = example_group.location.match(/\/.*b/).to_s
       spec_name = example.description
-      "SPEC=#{Dir.pwd}/#{spec_file} SPEC_OPTS='-e \"#{spec_name}\"'"
+      "SPEC=#{spec_file} SPEC_OPTS=\"-e \\\"#{spec_name}\\\"\""
     end
   end
 end

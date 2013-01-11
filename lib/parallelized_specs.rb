@@ -112,25 +112,41 @@ class ParallelizedSpecs
     puts ""
     puts summarize_results(results)
 
+
     #report total time taken
     puts ""
     puts "Took #{Time.now - start} seconds"
 
-    Dir.glob('tmp/parallel_log/spec_count/{*,.*}').count == 2 ? (puts "All threads completed") : (abort "One or more threads have failed") #works on both 1.8.7\1.9.3
-
+    if Dir.glob('tmp/parallel_log/spec_count/{*,.*}').count == 2 && Dir.glob('tmp/parallel_log/thread_started/{*,.*}').count == num_processes + 2
+      (puts "All threads completed")
+    elsif Dir.glob('tmp/parallel_log/thread_started/{*,.*}').count != num_processes + 2
+      abort "one or more threads didn't get started by rspec"
+    else
+      threads = Dir["tmp/parallel_log/spec_count/*"]
+      threads.each do |t|
+        failed_thread = t.match(/\d/).to_s
+        if failed_thread == "1"
+          puts "Thread 1 last spec to start running"
+          puts IO.readlines("tmp/parallel_log/thread_.log")[-1]
+        else
+          puts "Thread #{failed_thread} last spec to start running"
+          puts IO.readlines("tmp/parallel_log/thread_#{failed_thread}.log")[-1]
+        end
+      end
+      abort "One or more threads have failed, see above logging information for details" #works on both 1.8.7\1.9.3
+    end
     #exit with correct status code so rake parallel:test && echo 123 works
 
     failed = test_results.any? { |result| result[:exit_status] != 0 } #ruby 1.8.7 works breaks on 1.9.3
     puts "this is the exit status of the rspec suites #{failed}"
 
-    if Dir.glob('tmp/parallel_log/failed_specs/{*,.*}').count > 2 && FileTest.exist?("tmp/parallel_log/rspec.failures") # works on both 1.8.7\1.9.3
+    if Dir.glob('tmp/parallel_log/failed_specs/{*,.*}').count > 2 && !File.zero?("tmp/parallel_log/rspec.failures") # works on both 1.8.7\1.9.3
       puts "some specs failed, about to start the rerun process\n no more than 9 specs may be rerun and shared specs are not allowed\n...\n..\n."
       ParallelizedSpecs.rerun()
     else
-      abort "#{name.capitalize}s Failed" if Dir.glob('tmp/parallel_log/failed_specs/{*,.*}').count > 2 || if failed #works on both 1.8.7\1.9.3
-       end
+      #works on both 1.8.7\1.9.3
+      abort "#{name.capitalize}s Failed" if Dir.glob('tmp/parallel_log/failed_specs/{*,.*}').count > 2 || failed
     end
-    #this is getting run even if the rerun passes and causes triggers abort on successful reruns
     puts "marking build as PASSED"
   end
 
@@ -165,6 +181,7 @@ class ParallelizedSpecs
     f = open("|#{cmd}", 'r')
     output = fetch_output(f, options)
     f.close
+    puts "Exit status for process #{process_number} #{$?.exitstatus}"
     {:stdout => output, :exit_status => $?.exitstatus}
   end
 
@@ -295,7 +312,7 @@ class ParallelizedSpecs
           end
         end
 
-        puts "failed specs will be rerun\n rerunning #{@error_count} examples again"
+        puts "failed specs will be rerun\n rerunning #{@error_count} examples"
         @rerun_failures ||= []
         @rerun_passes ||= []
 
@@ -304,6 +321,7 @@ class ParallelizedSpecs
           puts "#{l} will be ran and marked as a success if it passes"
 
           result = %x[DISPLAY=:99 bundle exec rake spec #{l}]
+
 
           puts "this is the result\n#{result}"
           #can't just use exit code, if specs fail to start it will pass or if a spec isn't found, and sometimes rspec 1 exit codes aren't right
@@ -351,5 +369,6 @@ class ParallelizedSpecs
       end
     end
   end
+
 end
 
