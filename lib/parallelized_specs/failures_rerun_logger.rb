@@ -5,7 +5,7 @@ module RSpec
   class ParallelizedSpecs::FailuresFormatter < ParallelizedSpecs::SpecLoggerBase
 
     def example_failed(example, counter, failure)
-      lock_output do
+    lock_output do
         @output.puts retry_command(example)
       end
     end
@@ -29,7 +29,7 @@ module RSpec
 
     def retry_command(example)
       puts "Storing #{example_group.location} for a post build rerun attempt"
-      spec_file = example_group.location.match(/\/.*b/).to_s
+      spec_file = example_group.location.match(/.*rb/).to_s
       spec_name = example.description
       "SPEC=#{spec_file} SPEC_OPTS=\"-e \\\"#{spec_name}\\\"\""
     end

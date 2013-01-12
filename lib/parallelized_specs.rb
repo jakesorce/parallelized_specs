@@ -9,7 +9,8 @@ require 'parallelized_specs/outcome_builder'
 require 'parallelized_specs/example_failures_logger'
 require 'parallelized_specs/trending_example_failures_logger'
 require 'parallelized_specs/failures_rerun_logger'
-
+require 'parallelized_specs/slow_spec_logger'
+require 'fileutils'
 
 class ParallelizedSpecs
   VERSION = File.read(File.join(File.dirname(__FILE__), '..', 'VERSION')).strip
@@ -83,6 +84,10 @@ class ParallelizedSpecs
   end
 
   def self.run_specs(tests, options)
+    formatters = formatters_setup
+    @outcome_builder_enabled = formatters.any? { |formatter| formatter.match(/OutcomeBuilder/) }
+    @reruns_enabled = formatters.any? { |formatter| formatter.match(/FailuresFormatter/) }
+    @slow_specs_enabled = formatters.any? { |formatter| formatter.match(/SlowestSpecLogger/) }
     num_processes = options[:count] || Parallel.processor_count
     name = 'spec'
 
@@ -98,56 +103,117 @@ class ParallelizedSpecs
     num_processes = groups.size
 
     #adjust processes to groups
-    abort "no #{name}s found!" if groups.size == 0
+    abort "SEVERE: no #{name}s found!" if groups.size == 0
 
     num_tests = groups.inject(0) { |sum, item| sum + item.size }
-    puts "#{num_processes} processes for #{num_tests} #{name}s, ~ #{num_tests / groups.size} #{name}s per process"
+    puts "INFO: #{num_processes} processes for #{num_tests} #{name}s, ~ #{num_tests / groups.size} #{name}s per process"
 
     test_results = Parallel.map(groups, :in_processes => num_processes) do |group|
       run_tests(group, groups.index(group), options)
     end
-
-    #parse and print results
-    results = find_results(test_results.map { |result| result[:stdout] }*"")
-    puts ""
-    puts summarize_results(results)
-
-
-    #report total time taken
-    puts ""
-    puts "Took #{Time.now - start} seconds"
-
-    if Dir.glob('tmp/parallel_log/spec_count/{*,.*}').count == 2 && Dir.glob('tmp/parallel_log/thread_started/{*,.*}').count == num_processes + 2
-      (puts "All threads completed")
-    elsif Dir.glob('tmp/parallel_log/thread_started/{*,.*}').count != num_processes + 2
-      abort "one or more threads didn't get started by rspec"
-    else
-      threads = Dir["tmp/parallel_log/spec_count/*"]
-      threads.each do |t|
-        failed_thread = t.match(/\d/).to_s
-        if failed_thread == "1"
-          puts "Thread 1 last spec to start running"
-          puts IO.readlines("tmp/parallel_log/thread_.log")[-1]
-        else
-          puts "Thread #{failed_thread} last spec to start running"
-          puts IO.readlines("tmp/parallel_log/thread_#{failed_thread}.log")[-1]
-        end
-      end
-      abort "One or more threads have failed, see above logging information for details" #works on both 1.8.7\1.9.3
-    end
-    #exit with correct status code so rake parallel:test && echo 123 works
-
     failed = test_results.any? { |result| result[:exit_status] != 0 } #ruby 1.8.7 works breaks on 1.9.3
-    puts "this is the exit status of the rspec suites #{failed}"
+    slowest_spec_determination("#{Rails.root}/tmp/parallel_log/slowest_specs.log") if @slow_specs_enabled
 
-    if Dir.glob('tmp/parallel_log/failed_specs/{*,.*}').count > 2 && !File.zero?("tmp/parallel_log/rspec.failures") # works on both 1.8.7\1.9.3
-      puts "some specs failed, about to start the rerun process\n no more than 9 specs may be rerun and shared specs are not allowed\n...\n..\n."
+    results = find_results(test_results.map { |result| result[:stdout] }*"")
+
+
+    if @outcome_builder_enabled
+      puts "INFO: OutcomeBuilder is enabled now checking for false positives"
+      @total_specs, @total_failures, @total_pending = calculate_total_spec_details
+      puts "INFO: Total specs run #{total_specs} failed specs  #{total_failures} pending specs #{total_pending}\n INFO: Took #{Time.now - start} seconds"
+      #determines if any tricky conditions happened that can cause false positives and offers logging into what was the last spec to start or finishing running
+      false_positive_sniffer(num_processes)
+      if @reruns_enabled && @total_failures != 0
+        puts "INFO: RERUNS are enabled"
+        rerun_initializer
+      else
+        abort("SEVERE: #{name.capitalize}s Failed") if @total_failures != 0
+      end
+    else
+      puts "WARNING: OutcomeBuilder is disabled not checking for false positives its likely things like thread failures and rspec non 0 exit codes will cause false positives"
+      puts "INFO: #{summarize_results(results)} Took #{Time.now - start} seconds"
+      abort("SEVERE: #{name.capitalize}s Failed") if failed
+    end
+    puts "INFO: marking build as PASSED"
+  end
+
+  def self.calculate_total_spec_details
+    spec_total_details = [0, 0, 0]
+    File.open("#{Rails.root}/tmp/parallel_log/total_specs.txt").each_line do |count|
+      thread_spec_details = count.split("*")
+      spec_total_details[0] += thread_spec_details[0].to_i
+      spec_total_details[1] += thread_spec_details[1].to_i
+      spec_total_details[2] += thread_spec_details[2].to_i
+    end
+    [spec_total_details[0], spec_total_details[1], spec_total_details[2]]
+  end
+
+  def self.formatters_setup
+    formatters = []
+    File.open("#{Rails.root}/spec/spec.opts").each_line do |line|
+      formatters << line
+    end
+    formatter_directory_management(formatters)
+    formatters
+  end
+
+  def self.formatter_directory_management(formatters)
+    FileUtils.mkdir_p('parallel_log') if !File.directory?('tmp/parallel_log')
+    begin
+      %w['tmp/parallel_log/spec_count','tmp/parallel_log/failed_specs', 'tmp/parallel_log/thread_started'].each do |dir|
+        directory_cleanup_and_create(dir)
+      end
+    rescue SystemCallError
+      $stderr.print "directory management error " + $!
+      raise
+    end
+  end
+
+  def self.directory_cleanup_and_create(dir)
+    if File.directory?(dir)
+      FileUtils.rm_rf(dir)
+      FileUtils.mkdir_p(dir)
+    else
+      FileUtils.mkdir_p(dir)
+    end
+  end
+
+  def self.rerun_initializer()
+
+    if @total_failures != 0 && !File.zero?("#{Rails.root}/tmp/parallel_log/rspec.failures") # works on both 1.8.7\1.9.3
+      puts "INFO: some specs failed, about to start the rerun process\n...\n..\n."
       ParallelizedSpecs.rerun()
     else
       #works on both 1.8.7\1.9.3
-      abort "#{name.capitalize}s Failed" if Dir.glob('tmp/parallel_log/failed_specs/{*,.*}').count > 2 || failed
+      puts "ERROR: the build had failures but the rspec.failures file is null"
+      abort "SEVERE: SPECS Failed"
     end
-    puts "marking build as PASSED"
+  end
+
+  def self.false_positive_sniffer(num_processes)
+    if Dir.glob("#{Rails.root}/tmp/parallel_log/spec_count/{*,.*}").count == 2 && Dir.glob("#{Rails.root}/tmp/parallel_log/thread_started/{*,.*}").count == num_processes + 2
+      (puts "INFO: All threads completed")
+    elsif Dir.glob("#{Rails.root}/tmp/parallel_log/thread_started/{*,.*}").count != num_processes + 2
+      File.open("#{Rails.root}/tmp/parallel_log/error.log", 'a+') { |f| f.write "\n\n\n syntax errors" }
+      File.open("#{Rails.root}/tmp/failure_cause.log", 'a+') { |f| f.write "syntax errors" }
+      abort "SEVERE: one or more threads didn't get started by rspec, this may be caused by a syntax issue in specs, check logs right before specs start running"
+    else
+      threads = Dir["#{Rails.root}/tmp/parallel_log/spec_count/*"]
+      threads.each do |t|
+        failed_thread = t.match(/\d/).to_s
+        if failed_thread == "1"
+          puts "INFO: Thread 1 last spec to start running"
+          last_spec = IO.readlines("#{Rails.root}/tmp/parallel_log/thread_.log")[-1]
+          File.open("#{Rails.root}/tmp/parallel_log/error.log", 'a+') { |f| f.write "\n\n\n\nrspec thread #{failed_thread} failed to complete\n the last spec to try to run was #{last_spec}" }
+        else
+          puts "INFO: Thread #{failed_thread} last spec to start running"
+          last_spec = IO.readlines("#{Rails.root}/tmp/parallel_log/thread_#{failed_thread}.log")[-1]
+          File.open("#{Rails.root}/tmp/parallel_log/error.log", 'a+') { |f| f.write "\n\n\n\nrspec thread #{failed_thread} failed to complete\n the last spec to try to run was #{last_spec}" }
+        end
+      end
+      File.open("#{Rails.root}/tmp/failure_cause.log", 'a+') { |f| f.write "rspec thread failed to complete" }
+      abort "SEVERE: One or more threads have failed to complete, this may be caused by a rspec runtime crashing prematurely" #works on both 1.8.7\1.9.3
+    end
   end
 
 # parallel:spec[:count, :pattern, :options]
@@ -287,88 +353,216 @@ class ParallelizedSpecs
       # follow one symlink and direct children
       # http://stackoverflow.com/questions/357754/can-i-traverse-symlinked-directories-in-ruby-with-a-glob
       files = Dir["#{root}/**{,/*/**}/*#{test_suffix}"].uniq
-      files = files.map { |f| f.sub(/root+'\/'/, '') }
+      files = files.map { |f| f.sub(root+'/', '') }
       files = files.grep(/#{options[:pattern]}/)
       files.map { |f| "/#{f}" }
     end
   end
 
-  def self.rerun()
-    puts "beginning the failed specs rerun process"
-    rerun_failed_examples = false
-    rerun_specs = []
-    filename = "#{Rails.root}/tmp/parallel_log/rspec.failures"
+  def self.update_rerun_summary(l, outcome, stack = "")
+    File.open(@failure_summary, 'a+') { |f| f.puts("Outcome #{outcome} for #{l}\n #{stack}") }
+    File.open("#{Rails.root}/tmp/parallel_log/error.log", 'a+') { |f| f.puts("Outcome #{outcome} for #{l}\n #{stack}") } if outcome == "FAILED"
+  end
 
-    @error_count = %x{wc -l "#{filename}"}.match(/\d*[^\D]/).to_s #counts the number of lines in the file
-    @error_count = @error_count.to_i
+  def self.parse_result(result)
+    puts "INFO: this is the result\n#{result}"
+    #can't just use exit code, if specs fail to start it will pass or if a spec isn't found, and sometimes rspec 1 exit codes aren't right
+    rerun_status = result.scan(/\d*[^\D]\d*/).to_a
+    puts "INFO: this is the rerun_status\n#{rerun_status}"
+    @examples = rerun_status[-2].to_i
+    @failures = rerun_status.last.to_i
+  end
 
+  def self.rerun_spec(spec)
+    puts "INFO: #{spec} will be ran and marked as a success if it passes"
+    result = ""
+    @examples = 0
+    @failures = 0
+    result = %x[DISPLAY=:99 bundle exec rake spec #{spec}]
+    parse_result(result)
+    result
+  end
+
+  def self.print_failures(failure_summary, state = "")
+    puts "*****************INFO: #{state} SUMMARY*****************\n"
+    state == "RERUN" ? puts("INFO: outcomes of the specs that were rerun") : puts("INFO: summary of build failures")
+    file = File.open(failure_summary, "r")
+    content = file.read
+    puts content
+  end
+
+  def self.abort_reruns(code, result = "", l = "")
     case
-      when @error_count.between?(1, 9)
-        File.open(filename).each_line do |line|
-          if line =~ /spec\/selenium\/helpers/ || line =~ /spec\/selenium\/shared_examples/
-            abort "shared specs currently are not eligiable for reruns, marking build as a failure"
-          else
-            rerun_specs.push line
-          end
-        end
-
-        puts "failed specs will be rerun\n rerunning #{@error_count} examples"
-        @rerun_failures ||= []
-        @rerun_passes ||= []
-
-        rerun_specs.each do |l|
-          rerun_failed_examples = true
-          puts "#{l} will be ran and marked as a success if it passes"
-
-          result = %x[DISPLAY=:99 bundle exec rake spec #{l}]
-
-
-          puts "this is the result\n#{result}"
-          #can't just use exit code, if specs fail to start it will pass or if a spec isn't found, and sometimes rspec 1 exit codes aren't right
-          rerun_status = result.scan(/\d*[^\D]\d*/).to_a
-          puts "this is the rerun_status\n#{rerun_status}"
-
-          example_index = rerun_status.length - 2
-          @examples = rerun_status[example_index].to_i
-          @failures = rerun_status.last.to_i
-
-          if  @examples == 0 and @failures == 0
-            abort "spec didn't actually run, ending rerun process early"
-          end
-
-          if @examples == 0 #when specs fail to run it exits with 0 examples, 0 failures and won't be matched by the previous regex
-            abort "the spec failed to run on the rerun try, marking build as failed"
-          elsif @failures > 0
-            puts "the example failed again"
-            @rerun_failures << l
-          elsif @examples > 0 && @failures == 0
-            puts "the example passed and is being marked as a success"
-            @rerun_passes << l
-          else
-            abort "unexpected outcome on the rerun, marking build as a failure"
-          end
-          rerun_status = ""
-        end #end file loop
-
-      when @error_count == 0
-        abort "#{@error_count} errors, but the build failed, errors were not written to the file or there is something else wrong, marking build as a failure"
-      when @error_count > 9
-        abort "#{@error_count} errors are to many to rerun, marking the build as a failure"
-      else
+      when code == 1
+        print_failures("#{Rails.root}/tmp/parallel_log/error.log")
+        abort "SEVERE: shared specs currently are not eligiable for reruns, marking build as a failure"
+      when code == 2 # <--- won't ever happen, 2 and 3 are duplicate clean up on refactor
+        update_rerun_summary(l, "FAILED", result)
+        print_failures(@failure_summary, "RERUN")
+        abort "SEVERE: spec didn't actually run, ending rerun process early"
+      when code == 3
+        update_rerun_summary(l, "FAILED", result)
+        print_failures(@failure_summary, "RERUN")
+        abort "SEVERE: the spec failed to run on the rerun try, marking build as failed"
+      when code == 4
+        update_rerun_summary(l, "FAILED", result)
+        print_failures(@failure_summary, "RERUN")
+        abort "SEVERE: unexpected outcome on the rerun, marking build as a failure"
+      when code == 5
+        abort "SEVERE: #{@error_count} errors, but the build failed, errors were not written to the file or there is something else wrong, marking build as a failure"
+      when code == 6
+        print_failures("#{Rails.root}/tmp/parallel_log/error.log")
+        abort "SEVERE: #{@error_count} errors are to many to rerun, marking the build as a failure. Max errors defined for this build is #{@max_reruns}"
+      when code == 7
         puts "#Total errors #{@error_count}"
-        abort "unexpected error information, please check errors are being written to file correctly"
-    end
-
-    if rerun_failed_examples
-      if @rerun_failures.count > 0
-        abort "some specs failed on rerun, the build will be marked as failed"
-      elsif @rerun_passes.count >= @error_count
-        puts "all rerun examples passed, rspec will mark this build as passed"
+        abort "SEVERE: unexpected error information, please check errors are being written to file correctly"
+      when code == 8
+        print_failures(@failure_summary, "RERUN")
+        File.open("#{Rails.root}/tmp/failure_cause.log", 'a+') { |f| f.write "#{@rerun_failures.count} failures" }
+        abort "SEVERE: some specs failed on rerun, the build will be marked as failed"
+      when code == 9
+        abort "SEVERE: unexpected situation on rerun, marking build as failure"
       else
-        abort "unexpected situation on rerun, marking build as failure"
-      end
+        abort "SEVERE: unhandled abort_reruns code"
     end
   end
 
-end
+  def self.update_failed(l, result)
+    puts "WARNING: the example failed again"
+    update_rerun_summary(l, "FAILED", result)
+    @rerun_failures << l
+  end
 
+  def self.update_passed(l)
+    update_rerun_summary(l, "PASSED")
+    puts "INFO: the example passed and is being marked as a success"
+    @rerun_passes << l
+  end
+
+  def self.pass_reruns()
+    print_failures(@failure_summary, "RERUN")
+    puts "INFO: rerun summary all rerun examples passed, rspec will mark this build as passed"
+  end
+
+  def self.calculate_error_count()
+    @error_count = %x{wc -l "#{@filename}"}.match(/\d*[^\D]/).to_s #counts the number of lines in the file
+    @error_count = @error_count.to_i
+    puts "INFO: error count = #@error_count"
+    ENV["RERUNS"] != nil ? @max_reruns = ENV["RERUNS"].to_i : @max_reruns = 9
+
+    if !@error_count.between?(1, @max_reruns)
+      puts "INFO: total errors are not in rerun eligibility range"
+      case
+        when @error_count == 0
+          puts "INFO: 0 errors build being aborted"
+          abort_reruns(5)
+        when @error_count > @max_reruns
+          puts "INFO: error count has exceeded maximum errors of #{@max_reruns}"
+          abort_reruns(6)
+        else
+          abort_reruns(7)
+      end
+    else
+      @error_count
+    end
+  end
+
+  def self.determine_rerun_eligibility
+    @error_count = calculate_error_count
+    puts "INFO: total errors #{@error_count}"
+
+    File.open(@filename).each_line do |line|
+      if line =~ /spec\/selenium\/helpers/
+        abort_reruns(1)
+      else
+        puts "INFO: the following spec is eligible for reruns #{line}"
+        @rerun_specs.push line
+      end
+    end
+    puts "INFO: failures meet rerun criteria \n INFO: rerunning #{@error_count} examples"
+    File.open("#{Rails.root}/tmp/parallel_log/error.log", 'a+') { |f| f.puts("\n\n\n\n\n *****RERUN FAILURES*****\n") }
+  end
+
+  def self.start_reruns
+    determine_rerun_eligibility
+
+    @rerun_failures ||= []
+    @rerun_passes ||= []
+
+    @rerun_specs.each do |l|
+      puts "INFO: starting next spec"
+      result = rerun_spec(l)
+
+      puts "INFO: determining if the spec passed or failed"
+      puts "INFO: examples run = #@examples examples failed = #@failures"
+
+
+      if @examples == 0 && @failures == 0 #when specs fail to run it exits with 0 examples, 0 failures and won't be matched by the previous regex
+        abort_reruns(3, result, l)
+      elsif @failures > 0
+        update_failed(l, result)
+      elsif @examples > 0 && @failures == 0
+        update_passed(l)
+      else
+        abort_reruns(4, result, l)
+      end
+
+      puts "INFO: spec finished and has updated rerun state"
+    end
+    puts "INFO: reruns have completed calculating if build has passed or failed"
+    puts "INFO: total failed specs #{@rerun_failures.count}"
+    puts "INFO: total passed specs #{@rerun_passes.count}"
+    determine_rerun_outcome
+  end
+
+
+  def self.determine_rerun_outcome
+    if @rerun_failures.count > 0
+      abort_reruns(8)
+    elsif @rerun_passes.count >= @error_count
+      pass_reruns
+    else
+      abort_reruns(9)
+    end
+  end
+
+  def self.runtime_setup
+    @rerun_specs = []
+    @filename = "#{Rails.root}/tmp/parallel_log/rspec.failures"
+    @failure_summary = "#{Rails.root}/tmp/parallel_log/rerun_failure_summary.log"
+  end
+
+  def self.rerun()
+    puts "INFO: beginning the failed specs rerun process"
+    runtime_setup
+    start_reruns
+  end
+
+  def self.slowest_spec_determination(file)
+    if File.exists?(file)
+      spec_durations = []
+      File.open(file).each_line do |line|
+        spec_durations << line
+      end
+
+      File.open(file, 'w') { |f| f.truncate(0) }
+      populate_slowest_specs(spec_durations, file)
+    else
+      puts "slow spec profiling was not enabled"
+    end
+  end
+
+  def self.populate_slowest_specs(spec_durations, file)
+    slowest_specs = []
+    ENV["MAX_TIME"] != nil ? max_time = ENV["MAX_TIME"].to_i : max_time = 30
+    spec_durations.each do |spec|
+      time = spec.match(/.*\d/).to_s
+      if time.to_f >= max_time
+        slowest_specs << spec
+      end
+    end
+    slowest_specs.each do |slow_spec|
+      File.open(file, 'a+') { |f| f.puts slow_spec }
+    end
+  end
+end

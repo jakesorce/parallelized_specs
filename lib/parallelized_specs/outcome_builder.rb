@@ -9,8 +9,8 @@ module RSpec
       env_test_number = ENV['TEST_ENV_NUMBER']
       env_test_number = 1 if ENV['TEST_ENV_NUMBER'].blank?
       puts "Thread #{env_test_number.to_s} has #{@example_count} specs"
-      File.open("tmp/parallel_log/spec_count/total_specs#{env_test_number}.txt", 'a+') { |f| f.write(@example_count) }
-      File.open("tmp/parallel_log/thread_started/thread_#{env_test_number}.txt", 'a+') { |f| f.write("") }
+      File.open("#{RAILS_ROOT}/tmp/parallel_log/spec_count/total_specs#{env_test_number}.txt", 'a+') { |f| f.write(@example_count) }
+      File.open("#{RAILS_ROOT}/tmp/parallel_log/thread_started/thread_#{env_test_number}.txt", 'a+') { |f| f.write("") }
       super
     end
 
@@ -18,8 +18,8 @@ module RSpec
     def dump_summary(duration, example_count, failure_count, pending_count)
       env_test_number = ENV['TEST_ENV_NUMBER']
       env_test_number = 1 if ENV['TEST_ENV_NUMBER'].blank?
-      spec_file = "tmp/parallel_log/spec_count/total_specs#{env_test_number}.txt"
-      failure_file = "tmp/parallel_log/failed_specs/failed_specs#{env_test_number}.txt"
+      spec_file = "#{RAILS_ROOT}/tmp/parallel_log/spec_count/total_specs#{env_test_number}.txt"
+      failure_file = "#{RAILS_ROOT}/tmp/parallel_log/failed_specs/failed_specs#{env_test_number}.txt"
       expected_example_count = File.open(spec_file, &:readline).to_s
       puts "Expected example count = #{expected_example_count} from rspec example count = #{example_count}"
       File.delete(spec_file) if expected_example_count.to_i - example_count.to_i < 2
