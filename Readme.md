@@ -200,7 +200,9 @@ No built in interface to populate a database with these
 
 E.g.
 
+
 Add the following to your `spec/parallelized_spec.opts` (or `spec/spec.opts`) :
+
     RSpec 1.x:
       --format progress
       --require parallelized_specs/trending_example_failures_logger
@@ -216,7 +218,9 @@ creates a text file with any specs taking longer than 30 seconds by default but 
 
 E.g.
 
+
 Add the following to your `spec/parallelized_spec.opts` (or `spec/spec.opts`) :
+
     RSpec 1.x:
       --format progress
       --require parallelized_specs/slow_spec_logger
