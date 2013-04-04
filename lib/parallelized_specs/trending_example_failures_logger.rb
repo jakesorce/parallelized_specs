@@ -20,7 +20,7 @@ class ParallelizedSpecs::TrendingExampleFailures < ParallelizedSpecs::SpecLogger
   def dump_pending(*args);end
 
   def dump_summary(*args)
-    @hudson_build_info = File.read("#{RAILS_ROOT}/spec/build_info.txt")
+    @hudson_build_info = File.read("#{Rails.root}/spec/build_info.txt")
     lock_output do
       (@failed_examples||{}).each_pair do |example, details|
         @output.puts "#{example}#{details}#{@hudson_build_info}"
