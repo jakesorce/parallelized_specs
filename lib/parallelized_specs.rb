@@ -287,7 +287,7 @@ class ParallelizedSpecs
       # follow one symlink and direct children
       # http://stackoverflow.com/questions/357754/can-i-traverse-symlinked-directories-in-ruby-with-a-glob
       files = Dir["#{root}/**{,/*/**}/*#{test_suffix}"].uniq
-      files = files.map { |f| f.sub(root+'/', '') }
+      files = files.map { |f| f.sub(/root+'\/'/, '') }
       files = files.grep(/#{options[:pattern]}/)
       files.map { |f| "/#{f}" }
     end
@@ -297,7 +297,7 @@ class ParallelizedSpecs
     puts "beginning the failed specs rerun process"
     rerun_failed_examples = false
     rerun_specs = []
-    filename = "#{RAILS_ROOT}/tmp/parallel_log/rspec.failures"
+    filename = "#{Rails.root}/tmp/parallel_log/rspec.failures"
 
     @error_count = %x{wc -l "#{filename}"}.match(/\d*[^\D]/).to_s #counts the number of lines in the file
     @error_count = @error_count.to_i
