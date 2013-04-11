@@ -272,8 +272,9 @@ based loosely from https://github.com/grosser/parallel_tests
 ### [Contributors](http://github.com/jakesorce/parallelized_specs/contributors)
  - [Bryan Madsen](http://github.com/bmad)
 
-[Jake Sorce](http://github.com/jakesorce)<br/>
+ - [Jake Sorce](http://github.com/jakesorce)
 
-[Shawn Meredith](https://github.com/smeredith0506)<br/>
+ - [Shawn Meredith](https://github.com/smeredith0506)
+
 Hereby placed under public domain, do what you want, just do not hold me accountable...<br/>
 [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=jakesorce&url=https://github.com/jakesorce/parallelized_specs&title=parallelized_specs&language=en_GB&tags=github&category=software)
