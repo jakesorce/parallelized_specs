@@ -3,8 +3,9 @@ ParallelizedSpecs splits tests into even groups(by number of tests or runtime) a
 
 Setup Requirements
 ***IMPORTANT***
-**OutcomeBuilder Formatter and FailuresFormatter must be enabled when using reruns or some ruby 1.9.3 version
-This allows streamlined pass\fail determination and thorough false positive checking while handing unusual pass\fail conditions in some versions of ruby 1.9.3
+**OutcomeBuilder Formatter and FailuresFormatter must be enabled when using reruns or some ruby 1.9.3 version will provide false positives.
+This allows streamlined pass\fail determination and thorough false positive checking while handling unusual pass\fail conditions in some versions of ruby 1.9.3
+
 See FailuresFormatter readme section and set RERUNS to 0 if don't want to allow reruns but are using a ruby 1.9.3 version
 
 
