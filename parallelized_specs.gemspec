@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "parallelized_specs"
-  s.version = "0.4.50"
+  s.version = "0.4.60"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jake Sorce, Bryan Madsen, Shawn Meredith"]
-  s.date = "2013-04-09"
+  s.date = "2013-08-20"
   s.email = "jake@instructure.com"
   s.files = [
     "Gemfile",
@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
     "lib/parallelized_specs/outcome_builder.rb",
     "lib/parallelized_specs/railtie.rb",
     "lib/parallelized_specs/runtime_logger.rb",
+    "lib/parallelized_specs/selenium_trending_collector.rb",
     "lib/parallelized_specs/slow_spec_logger.rb",
     "lib/parallelized_specs/spec_error_count_logger.rb",
     "lib/parallelized_specs/spec_error_logger.rb",

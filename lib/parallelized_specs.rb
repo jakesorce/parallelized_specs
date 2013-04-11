@@ -116,11 +116,10 @@ class ParallelizedSpecs
 
     results = find_results(test_results.map { |result| result[:stdout] }*"")
 
-
     if @outcome_builder_enabled
       puts "INFO: OutcomeBuilder is enabled now checking for false positives"
       @total_specs, @total_failures, @total_pending = calculate_total_spec_details
-      puts "INFO: Total specs run #{total_specs} failed specs  #{total_failures} pending specs #{total_pending}\n INFO: Took #{Time.now - start} seconds"
+      puts "INFO: Total specs run #{@total_specs} failed specs  #{@total_failures} pending specs #{@total_pending}\n INFO: Took #{Time.now - start} seconds"
       #determines if any tricky conditions happened that can cause false positives and offers logging into what was the last spec to start or finishing running
       false_positive_sniffer(num_processes)
       if @reruns_enabled && @total_failures != 0
@@ -158,24 +157,12 @@ class ParallelizedSpecs
   end
 
   def self.formatter_directory_management(formatters)
-    FileUtils.mkdir_p('parallel_log') if !File.directory?('tmp/parallel_log')
     begin
-      %w['tmp/parallel_log/spec_count','tmp/parallel_log/failed_specs', 'tmp/parallel_log/thread_started'].each do |dir|
-        directory_cleanup_and_create(dir)
-      end
-    rescue SystemCallError
-      $stderr.print "directory management error " + $!
-      raise
+      File.directory?('tmp/parallel_log') ? `rm -rf tmp/parallel_log && mkdir tmp/parallel_log` : FileUtils.mkdir_p('tmp/parallel_log')
     end
-  end
-
-  def self.directory_cleanup_and_create(dir)
-    if File.directory?(dir)
-      FileUtils.rm_rf(dir)
-      FileUtils.mkdir_p(dir)
-    else
-      FileUtils.mkdir_p(dir)
-    end
+  rescue SystemCallError
+    $stderr.print "directory management error " + $!
+    raise
   end
 
   def self.rerun_initializer()
@@ -202,12 +189,12 @@ class ParallelizedSpecs
       threads.each do |t|
         failed_thread = t.match(/\d/).to_s
         if failed_thread == "1"
-          puts "INFO: Thread 1 last spec to start running"
           last_spec = IO.readlines("#{Rails.root}/tmp/parallel_log/thread_.log")[-1]
+          puts "INFO: Thread 1 last spec to start running \n #{last_spec}"
           File.open("#{Rails.root}/tmp/parallel_log/error.log", 'a+') { |f| f.write "\n\n\n\nrspec thread #{failed_thread} failed to complete\n the last spec to try to run was #{last_spec}" }
         else
-          puts "INFO: Thread #{failed_thread} last spec to start running"
           last_spec = IO.readlines("#{Rails.root}/tmp/parallel_log/thread_#{failed_thread}.log")[-1]
+          puts "INFO: Thread #{failed_thread} last spec to start running \n #{last_spec}"
           File.open("#{Rails.root}/tmp/parallel_log/error.log", 'a+') { |f| f.write "\n\n\n\nrspec thread #{failed_thread} failed to complete\n the last spec to try to run was #{last_spec}" }
         end
       end
@@ -367,15 +354,14 @@ class ParallelizedSpecs
   def self.parse_result(result)
     puts "INFO: this is the result\n#{result}"
     #can't just use exit code, if specs fail to start it will pass or if a spec isn't found, and sometimes rspec 1 exit codes aren't right
-    rerun_status = result.scan(/\d*[^\D]\d*/).to_a
-    puts "INFO: this is the rerun_status\n#{rerun_status}"
-    @examples = rerun_status[-2].to_i
-    @failures = rerun_status.last.to_i
+    examples = result.match(/(\d) example/).to_a
+    failures = result.match(/(\d) failure/).to_a
+    @examples = examples.last.to_i
+    @failures = failures.last.to_i
   end
 
   def self.rerun_spec(spec)
     puts "INFO: #{spec} will be ran and marked as a success if it passes"
-    result = ""
     @examples = 0
     @failures = 0
     result = %x[DISPLAY=:99 bundle exec rake spec #{spec}]
@@ -565,4 +551,5 @@ class ParallelizedSpecs
       File.open(file, 'a+') { |f| f.puts slow_spec }
     end
   end
+
 end
