@@ -157,19 +157,40 @@ class ParallelizedSpecs
   end
 
   def self.formatter_directory_management(formatters)
+    FileUtils.mkdir_p('parallel_log') if !File.directory?('tmp/parallel_log')
     begin
-      File.directory?('tmp/parallel_log') ? `rm -rf tmp/parallel_log && mkdir tmp/parallel_log` : FileUtils.mkdir_p('tmp/parallel_log')
+      ['tmp/parallel_log/spec_count', 'tmp/parallel_log/failed_specs', 'tmp/parallel_log/thread_started'].each do |dir|
+        directory_cleanup_and_create(dir)
+        ['rspec.failures', 'total_count.txt', 'error.log', 'error_count.log', 'outcome_builder.log', 'trends.log', 'example_rerun_failures.log'].each do |file|
+          file_cleanup_and_create(file)
+        end
+      end
+    rescue SystemCallError
+      $stderr.print "directory management error " + $!
+      raise
     end
-  rescue SystemCallError
-    $stderr.print "directory management error " + $!
-    raise
+  end
+
+  def self.file_cleanup_and_create(file)
+    if File.exists?(file)
+      `rm tmp/parallel_log/#{file} && touch tmp/parallel_log/#{file}`
+    else
+      `touch tmp/parallel_log/#{file}`
+    end
+  end
+
+  def self.directory_cleanup_and_create(dir)
+    if File.directory?(dir)
+      `rm -rf #{dir} && mkdir #{dir}`
+    else
+      `mkdir #{dir}`
+    end
   end
 
   def self.rerun_initializer()
-
     if @total_failures != 0 && !File.zero?("#{Rails.root}/tmp/parallel_log/rspec.failures") # works on both 1.8.7\1.9.3
       puts "INFO: some specs failed, about to start the rerun process\n...\n..\n."
-      ParallelizedSpecs.rerun()
+      ParallelizedSpecs.rerun(@total_failures)
     else
       #works on both 1.8.7\1.9.3
       puts "ERROR: the build had failures but the rspec.failures file is null"
@@ -408,6 +429,9 @@ class ParallelizedSpecs
         abort "SEVERE: some specs failed on rerun, the build will be marked as failed"
       when code == 9
         abort "SEVERE: unexpected situation on rerun, marking build as failure"
+      when code == 10
+        `cat tmp/parallel_log/rspec.failures`
+        abort "SEVERE: reruns isn't running because there is a mismatch in the number of expected errors"
       else
         abort "SEVERE: unhandled abort_reruns code"
     end
@@ -436,7 +460,7 @@ class ParallelizedSpecs
     puts "INFO: error count = #@error_count"
     ENV["RERUNS"] != nil ? @max_reruns = ENV["RERUNS"].to_i : @max_reruns = 9
 
-    if !@error_count.between?(1, @max_reruns)
+    if !@error_count.between?(1, @max_reruns) || @rspec_total_error_count > @error_count
       puts "INFO: total errors are not in rerun eligibility range"
       case
         when @error_count == 0
@@ -445,6 +469,9 @@ class ParallelizedSpecs
         when @error_count > @max_reruns
           puts "INFO: error count has exceeded maximum errors of #{@max_reruns}"
           abort_reruns(6)
+        when @rspec_total_error_count > @error_count
+          puts "rspec reported more errors than rspec.failures contains, not safe to pass build using reruns"
+          abort_reruns(10)
         else
           abort_reruns(7)
       end
@@ -518,7 +545,8 @@ class ParallelizedSpecs
     @failure_summary = "#{Rails.root}/tmp/parallel_log/rerun_failure_summary.log"
   end
 
-  def self.rerun()
+  def self.rerun(rspec_total_error_count)
+    @rspec_total_error_count = rspec_total_error_count
     puts "INFO: beginning the failed specs rerun process"
     runtime_setup
     start_reruns
@@ -551,5 +579,4 @@ class ParallelizedSpecs
       File.open(file, 'a+') { |f| f.puts slow_spec }
     end
   end
-
 end
