@@ -1,34 +1,35 @@
 require 'parallelized_specs'
 
 module RSpec
-
-
   class ParallelizedSpecs::SlowestSpecLogger < ParallelizedSpecs::SpecLoggerBase
+
+    def initialize(*args)
+      super
+      @example_times = {}
+    end
 
     def example_started(example)
       @spec_start_time = Time.now
     end
 
     def example_passed(example)
-      total_time = determine_spec_duration(@spec_start_time)
-      write_total_spec_time(total_time, example)
+      add_total_spec_time(example)
     end
 
     def example_failed(example, count, failure)
-      total_time = determine_spec_duration(@spec_start_time)
-      write_total_spec_time(total_time, example)
+      add_total_spec_time(example)
     end
 
-    def determine_spec_duration(spec_start_time)
-      total_time = Time.now - spec_start_time
-      total_time
-    end
-
-    def write_total_spec_time(total_time, example)
+    def dump_summary(duration, example_count, failure_count, pending_count)
       lock_output do
-        @output.puts "#{total_time}*#{example.description}*#{example_group.location}"
+        @example_times.sort.map.each { |time, example| @output.write "#{time} #{example}\n" if time.to_f > 10 }
       end
       @output.flush
+    end
+
+    def add_total_spec_time(example)
+      total_time = Time.now - @spec_start_time
+      @example_times[total_time] = " file: #{example.location.match(/spec.*rb:\w*/).to_s} spec: #{example.description}"
     end
   end
 end
