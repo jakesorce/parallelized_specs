@@ -385,7 +385,7 @@ class ParallelizedSpecs
     puts "INFO: #{spec} will be ran and marked as a success if it passes"
     @examples = 0
     @failures = 0
-    result = %x[DISPLAY=:99 bundle exec rake spec #{spec}]
+    result = %x[export DISPLAY=:20.0 firefox && bundle exec rake spec #{spec}]
     parse_result(result)
     result
   end
